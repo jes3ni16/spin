@@ -8,6 +8,7 @@ body {
     font-family: Arial, sans-serif;
     text-align: center;
     background: #f0f0f0;
+    position: relative;
 }
 #wheelCanvas {
     margin-top: 40px;
@@ -18,8 +19,12 @@ body {
 button {
     padding: 12px 25px;
     font-size: 18px;
-    margin-top: 20px;
     cursor: pointer;
+}
+#resetBtn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
 }
 #result {
     font-size: 24px;
@@ -31,9 +36,9 @@ button {
 <body>
 
 <h1>Spin the Wheel</h1>
+<button id="resetBtn" onclick="resetWheel()">RESET</button>
 <canvas id="wheelCanvas" width="400" height="400"></canvas><br>
 <button onclick="spin()">SPIN</button>
-<button onclick="resetWheel()">RESET</button>
 <div id="result"></div>
 
 <script>
@@ -70,7 +75,7 @@ function drawWheel() {
 function spin(){
     if(spinning || items.length===0) return;
     spinning=true;
-    let spinTime = Math.random()*5000+3000;
+    let spinTime = 1000; // 1 second
     let interval = setInterval(()=>{
         startAngle += 0.25;
         drawWheel();
