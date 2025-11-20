@@ -3,10 +3,10 @@
 <head>
 <title>Spin the Wheel</title>
 <style>
-    body { font-family: Arial; text-align: center; background: #f0f0f0; }
-    #wheelCanvas { margin-top: 40px; background: #fff; border: 5px solid #333; border-radius: 50%; }
-    button { padding: 12px 25px; font-size: 18px; margin-top: 20px; cursor: pointer; }
-    #result { font-size: 24px; margin-top: 20px; font-weight: bold; }
+body { font-family: Arial; text-align: center; background: #f0f0f0; }
+#wheelCanvas { margin-top: 40px; background: #fff; border: 5px solid #333; border-radius: 50%; }
+button { padding: 12px 25px; font-size: 18px; margin-top: 20px; cursor: pointer; }
+#result { font-size: 24px; margin-top: 20px; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -28,21 +28,26 @@ async function loadItems() {
         let res = await fetch(API_URL);
         let text = await res.text();
         items = text.trim() ? text.split(",") : [...defaultItems];
-        if(!text.trim()) saveItems(); // Initialize sheet if empty
-    } catch(e) {
+        if (!text.trim()) saveItems(); // initialize if empty
+    } catch (e) {
+        console.error("Failed to load items:", e);
         items = [...defaultItems];
     }
     drawWheel();
 }
 
-// Save items using GET query
+// Save items using GET query string
 async function saveItems() {
-    const itemsStr = encodeURIComponent(items.join(","));
-    await fetch(`${API_URL}?items=${itemsStr}`);
+    try {
+        const itemsStr = encodeURIComponent(items.join(","));
+        const res = await fetch(`${API_URL}?items=${itemsStr}`);
+        console.log("Saved items:", itemsStr, "Response:", await res.text());
+    } catch(e) {
+        console.error("Failed to save items:", e);
+    }
 }
 
-// ----------------- Wheel Drawing -----------------
-
+// ---------------- Wheel Drawing ----------------
 let canvas = document.getElementById("wheelCanvas");
 let ctx = canvas.getContext("2d");
 let arc = 0;
@@ -72,8 +77,7 @@ function drawWheel() {
     }
 }
 
-// ----------------- Spin -----------------
-
+// ---------------- Spin ----------------
 async function spin(){
     if(spinning || items.length===0) return;
     spinning=true;
@@ -106,7 +110,7 @@ async function pickWinner(){
     drawWheel();
 }
 
-// Load data at startup
+// Load on startup
 loadItems();
 </script>
 
