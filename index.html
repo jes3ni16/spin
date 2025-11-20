@@ -15,11 +15,20 @@ body {
     background: #ffffff;
     border: 5px solid #333;
     border-radius: 50%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
 }
 button {
     padding: 12px 25px;
     font-size: 18px;
     cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    background-color: #333;
+    color: #fff;
+    transition: background 0.3s;
+}
+button:hover {
+    background-color: #555;
 }
 #resetBtn {
     position: absolute;
@@ -50,34 +59,51 @@ let ctx = canvas.getContext("2d");
 let startAngle = 0;
 let spinning = false;
 
+// Rainbow colors for segments
+const colors = ["#FF5733","#FFBD33","#75FF33","#33FF57","#33FFBD","#3375FF","#8C33FF","#FF33A8"];
+
 function drawWheel() {
     if(items.length === 0) return;
     let arc = (2 * Math.PI) / items.length;
     ctx.clearRect(0,0,400,400);
     for(let i=0;i<items.length;i++){
         let angle = startAngle + i*arc;
-        ctx.fillStyle = i%2===0 ? "#FFA600" : "#FF6A00";
+        ctx.fillStyle = colors[i % colors.length];
+
+        // Draw segment
         ctx.beginPath();
         ctx.moveTo(200,200);
         ctx.arc(200,200,200,angle,angle+arc);
         ctx.fill();
         ctx.closePath();
+
+        // Draw text
         ctx.save();
         ctx.translate(200,200);
         ctx.rotate(angle + arc/2);
         ctx.fillStyle = "#000";
-        ctx.font = "18px Arial";
-        ctx.fillText(items[i], 70, 10);
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(items[i], 120, 5); // further out for better visibility
         ctx.restore();
     }
+
+    // Draw center circle
+    ctx.beginPath();
+    ctx.arc(200,200,40,0,2*Math.PI);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.strokeStyle = "#333";
+    ctx.stroke();
+    ctx.closePath();
 }
 
 function spin(){
     if(spinning || items.length===0) return;
     spinning=true;
-    let spinTime = 1000; // 1 second
+    let spinTime = 1000; 
     let interval = setInterval(()=>{
-        startAngle += 0.25;
+        startAngle += 0.3; 
         drawWheel();
     },20);
     setTimeout(()=>{
