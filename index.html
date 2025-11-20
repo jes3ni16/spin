@@ -1,12 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <title>Spin the Wheel</title>
 <style>
-body { font-family: Arial; text-align: center; background: #f0f0f0; }
-#wheelCanvas { margin-top: 40px; background: #fff; border: 5px solid #333; border-radius: 50%; }
-button { padding: 12px 25px; font-size: 18px; margin-top: 20px; cursor: pointer; }
-#result { font-size: 24px; margin-top: 20px; font-weight: bold; }
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f0f0f0;
+}
+#wheelCanvas {
+    margin-top: 40px;
+    background: #ffffff;
+    border: 5px solid #333;
+    border-radius: 50%;
+}
+button {
+    padding: 12px 25px;
+    font-size: 18px;
+    margin-top: 20px;
+    cursor: pointer;
+}
+#result {
+    font-size: 24px;
+    margin-top: 20px;
+    font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -14,104 +33,78 @@ button { padding: 12px 25px; font-size: 18px; margin-top: 20px; cursor: pointer;
 <h1>Spin the Wheel</h1>
 <canvas id="wheelCanvas" width="400" height="400"></canvas><br>
 <button onclick="spin()">SPIN</button>
+<button onclick="resetWheel()">RESET</button>
 <div id="result"></div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzt9r558hCh-fPVQYB9tc1m3BbYm8uuhCJvtDVp9hy3E3x-JQo4kJMzrntXK8wBQnawpg/exec"; // <-- Replace with your Apps Script URL
+const defaultItems = ["Randy","Mel","Jose","AJ","Yev","Brion"];
+let items = JSON.parse(localStorage.getItem("wheelItems")) || [...defaultItems];
 
-let defaultItems = ["Randy","Mel","Jose","AJ","Yev","Brion"];
-let items = [];
-
-// Load items from Google Sheets
-async function loadItems() {
-    try {
-        let res = await fetch(API_URL);
-        let text = await res.text();
-        items = text.trim() ? text.split(",") : [...defaultItems];
-        if (!text.trim()) saveItems(); // initialize if empty
-    } catch (e) {
-        console.error("Failed to load items:", e);
-        items = [...defaultItems];
-    }
-    drawWheel();
-}
-
-// Save items using GET query string
-async function saveItems() {
-    try {
-        const itemsStr = encodeURIComponent(items.join(","));
-        const res = await fetch(`${API_URL}?items=${itemsStr}`);
-        console.log("Saved items:", itemsStr, "Response:", await res.text());
-    } catch(e) {
-        console.error("Failed to save items:", e);
-    }
-}
-
-// ---------------- Wheel Drawing ----------------
 let canvas = document.getElementById("wheelCanvas");
 let ctx = canvas.getContext("2d");
-let arc = 0;
 let startAngle = 0;
 let spinning = false;
 
 function drawWheel() {
-    if(items.length===0) return;
-    arc = Math.PI*2/items.length;
+    if(items.length === 0) return;
+    let arc = (2 * Math.PI) / items.length;
     ctx.clearRect(0,0,400,400);
     for(let i=0;i<items.length;i++){
         let angle = startAngle + i*arc;
-        ctx.fillStyle = i%2===0?"#FFA600":"#FF6A00";
+        ctx.fillStyle = i%2===0 ? "#FFA600" : "#FF6A00";
         ctx.beginPath();
         ctx.moveTo(200,200);
         ctx.arc(200,200,200,angle,angle+arc);
         ctx.fill();
         ctx.closePath();
-
         ctx.save();
         ctx.translate(200,200);
-        ctx.rotate(angle+arc/2);
-        ctx.fillStyle="#000";
-        ctx.font="18px Arial";
-        ctx.fillText(items[i],70,10);
+        ctx.rotate(angle + arc/2);
+        ctx.fillStyle = "#000";
+        ctx.font = "18px Arial";
+        ctx.fillText(items[i], 70, 10);
         ctx.restore();
     }
 }
 
-// ---------------- Spin ----------------
-async function spin(){
+function spin(){
     if(spinning || items.length===0) return;
     spinning=true;
-
-    let spinTime = Math.random()*5000 + 3000;
-    let interval = setInterval(()=>{ startAngle+=0.25; drawWheel(); }, 20);
-
-    setTimeout(async ()=>{
+    let spinTime = Math.random()*5000+3000;
+    let interval = setInterval(()=>{
+        startAngle += 0.25;
+        drawWheel();
+    },20);
+    setTimeout(()=>{
         clearInterval(interval);
         spinning=false;
-        await pickWinner();
-    }, spinTime);
+        pickWinner();
+    },spinTime);
 }
 
-async function pickWinner(){
+function pickWinner(){
+    let arc = (2*Math.PI)/items.length;
     let degrees = startAngle*180/Math.PI + 90;
     let index = Math.floor((360-(degrees%360))/(360/items.length));
     let winner = items[index];
     document.getElementById("result").innerHTML = "Winner: " + winner;
-
     items.splice(index,1);
-    await saveItems();
-
     if(items.length===0){
         document.getElementById("result").innerHTML += "<br>List empty. Resetting!";
         items = [...defaultItems];
-        await saveItems();
     }
-
+    localStorage.setItem("wheelItems",JSON.stringify(items));
     drawWheel();
 }
 
-// Load on startup
-loadItems();
+function resetWheel(){
+    items = [...defaultItems];
+    localStorage.setItem("wheelItems",JSON.stringify(items));
+    document.getElementById("result").innerHTML = "Wheel reset!";
+    drawWheel();
+}
+
+drawWheel();
 </script>
 
 </body>
